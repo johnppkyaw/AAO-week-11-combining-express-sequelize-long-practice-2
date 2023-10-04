@@ -54,7 +54,6 @@ router.get('/:id', async (req, res, next) => {
                 id: req.params.id
             }
         })
-
         if (tree) {
             res.json(tree);
         } else {
@@ -91,9 +90,38 @@ router.get('/:id', async (req, res, next) => {
  */
 router.post('/', async (req, res, next) => {
     try {
+
+        //check if name is added previously
+        const alreadyAddedTree = await Tree.findOne({
+            where: {
+                tree: req.body.name
+            }
+        })
+        if(alreadyAddedTree) {
+            throw new Error(`${req.body.name} is already in the database.  Name must be unique.`)
+        }
+
+        //check if any of the fields are missing
+        const attributesToCheck = ['name', 'location', 'height', 'size'];
+        attributesToCheck.forEach(attribute => {
+            if (req.body[attribute] === null || req.body[attribute] === undefined) {
+                throw new Error(`Missing ${attribute}!  Must have values for name, location, height, and size!`)
+            }
+        })
+
+        const newTree = Tree.build({
+            tree: req.body.name,
+            location: req.body.location,
+            heightFt: req.body.height,
+            groundCircumferenceFt: req.body.size
+        });
+
+        await newTree.save();
+
         res.json({
             status: "success",
             message: "Successfully created new tree",
+            data: newTree
         });
     } catch(err) {
         next({
@@ -126,10 +154,20 @@ router.post('/', async (req, res, next) => {
  */
 router.delete('/:id', async (req, res, next) => {
     try {
-        res.json({
-            status: "success",
-            message: `Successfully removed tree ${req.params.id}`,
-        });
+        const targetTree = await Tree.findOne({
+            where: {
+                id: req.params.id
+            }
+        })
+        if(targetTree) {
+            targetTree.destroy();
+            res.json({
+                status: "success",
+                message: `Successfully removed tree ${req.params.id}`,
+            });
+        } else {
+            throw new Error('Tree not found');
+        }
     } catch(err) {
         next({
             status: "error",
