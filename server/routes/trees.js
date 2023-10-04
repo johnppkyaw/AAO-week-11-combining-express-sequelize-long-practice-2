@@ -170,7 +170,7 @@ router.delete('/:id', async (req, res, next) => {
         }
     } catch(err) {
         next({
-            status: "error",
+            status: "not-found",
             message: `Could not remove tree ${req.params.id}`,
             details: err.errors ? err.errors.map(item => item.message).join(', ') : err.message
         });
