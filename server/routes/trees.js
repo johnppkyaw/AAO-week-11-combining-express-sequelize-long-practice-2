@@ -213,11 +213,52 @@ router.delete('/:id', async (req, res, next) => {
  */
 router.put('/:id', async (req, res, next) => {
     try {
-        // Your code here
+        const id = Number(req.params.id);
+        const idFromBody = req.body.id;
+
+        //find the target
+        const targetTree = await Tree.findOne({
+            where: {
+                id: id
+            }
+        })
+
+        //If target tree is not found
+        if (!targetTree) {
+            next({
+                status: 'not-found',
+                message: `Could not update tree ${id}`,
+                details: 'Tree not found'
+            });
+        }
+
+        //If id in request params does not match id in request body
+        if(id !== idFromBody) {
+            throw new Error(`${id} does not match ${idFromBody}`)
+        }
+
+        //update changes
+        const newInfo = {
+            tree: req.body.name,
+            location: req.body.location,
+            heightFt: req.body.height,
+            groundCircumferenceFt: req.body.size
+        };
+        for (const key in newInfo) {
+            if (!newInfo[key]) {
+                delete newInfo[key];
+            }
+        }
+        await targetTree.update(newInfo);
+        res.json({
+            status: 'success',
+            message: 'Successfully updated tree',
+            data: targetTree
+        })
     } catch(err) {
         next({
             status: "error",
-            message: 'Could not update new tree',
+            message: 'Could not update tree',
             details: err.errors ? err.errors.map(item => item.message).join(', ') : err.message
         });
     }
