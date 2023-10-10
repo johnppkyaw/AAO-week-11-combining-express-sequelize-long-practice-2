@@ -24,6 +24,20 @@ router.get('/trees-insects', async (req, res, next) => {
 
     trees = await Tree.findAll({
         attributes: ['id', 'tree', 'location', 'heightFt'],
+        include: {
+            model: Insect,
+            required: true,
+            attributes: ['id', 'name'],
+            through: { attributes: [] },
+            order: [['Insect', 'name']]
+        }
+    });
+
+    trees = trees.map((tree) => {
+        tree.Insects.sort((a, b) => {
+            return a.name.localeCompare(b.name);
+        });
+        return tree;
     });
 
     res.json(trees);
@@ -51,13 +65,21 @@ router.get('/insects-trees', async (req, res, next) => {
     });
     for (let i = 0; i < insects.length; i++) {
         const insect = insects[i];
-        payload.push({
-            id: insect.id,
-            name: insect.name,
-            description: insect.description,
+        const trees = await insect.getTrees({
+            attributes:["id", "tree"],
+            joinTableAttributes: []
         });
+        if(trees.length > 0) {
+            trees.sort((a, b) => a.tree.localeCompare(b.tree));
+            payload.push({
+                id: insect.id,
+                name: insect.name,
+                description: insect.description,
+                trees: trees
+            });
+        }
     }
-
+    // payload.forEach(insect => insect.trees.sort (a, b) => a.name.localeCompare(b.name);)
     res.json(payload);
 });
 

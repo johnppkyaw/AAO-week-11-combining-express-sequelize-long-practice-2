@@ -99,8 +99,8 @@ describe("Intermediate Phase 7: Fetching Related Records (Eager & Lazy Loading)"
             });
           });
 
-          const tree1Name = res.body[2].trees[0].tree.toLowerCase();
-          const tree2Name = res.body[2].trees[1].tree.toLowerCase();
+          const tree1Name = res.body[1].trees[0].tree.toLowerCase();
+          const tree2Name = res.body[1].trees[1].tree.toLowerCase();
 
           expect(tree1Name.localeCompare(tree2Name)).to.equal(
             -1,
