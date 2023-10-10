@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       Tree.belongsToMany(
         models.Insect,
-        {through: models.InsectTree, onDelete: 'CASCADE', hooks: true}
+        {through: models.InsectTree, onDelete: 'CASCADE', hooks: true, as:'insects'}
       )
     }
   };

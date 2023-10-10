@@ -16,20 +16,16 @@ module.exports = (sequelize, DataTypes) => {
   InsectTree.init({
     insectId: {
       type: DataTypes.INTEGER,
-      foreignKey: {
-        references: {
-          model: 'Insects',
-          key: 'id'
-        }
+      references: {
+        model: 'Insects',
+        key: 'id'
       }
     },
     treeId: {
       type: DataTypes.INTEGER,
-      foreignKey: {
-        references: {
-          model: 'Trees',
-          key: 'id'
-        }
+      references: {
+        model: 'Trees',
+        key: 'id'
       }
     }
   }, {
