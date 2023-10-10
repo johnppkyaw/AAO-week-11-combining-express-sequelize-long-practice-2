@@ -277,8 +277,17 @@ router.put('/:id', async (req, res, next) => {
  */
 router.get('/search/:value', async (req, res, next) => {
     let trees = [];
-
-
+    trees = await Tree.findAll({
+        attributes: [
+            'heightFt', 'tree', 'id'
+        ],
+        where: {
+            tree: {
+                [Op.like]:`%${req.params.value}%`
+            }
+        },
+        order: [['tree']]
+    })
     res.json(trees);
 });
 
