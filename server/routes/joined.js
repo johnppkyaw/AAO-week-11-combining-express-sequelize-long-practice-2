@@ -29,7 +29,7 @@ router.get('/trees-insects', async (req, res, next) => {
             required: true,
             attributes: ['id', 'name'],
             through: { attributes: [] },
-            order: [['Insect', 'name']]
+            order: [['name', 'ASC']]
         }
     });
 
@@ -57,30 +57,57 @@ router.get('/trees-insects', async (req, res, next) => {
  *   - Trees ordered alphabetically by tree
  */
 router.get('/insects-trees', async (req, res, next) => {
-    let payload = [];
+    // old attempt
+    // let payload = [];
 
+    // const insects = await Insect.findAll({
+    //     attributes: ['id', 'name', 'description'],
+    //     order: [ ['name'] ],
+    // });
+    // for (let i = 0; i < insects.length; i++) {
+    //     const insect = insects[i];
+    //     const trees = await insect.getTrees({
+    //         attributes:["id", "tree"],
+    //         joinTableAttributes: []
+    //     });
+    //     if(trees.length > 0) {
+    //         trees.sort((a, b) => a.tree.localeCompare(b.tree));
+    //         payload.push({
+    //             id: insect.id,
+    //             name: insect.name,
+    //             description: insect.description,
+    //             trees: trees
+    //         });
+    //     }
+    // }
+    // res.json(payload);
     const insects = await Insect.findAll({
         attributes: ['id', 'name', 'description'],
-        order: [ ['name'] ],
-    });
-    for (let i = 0; i < insects.length; i++) {
-        const insect = insects[i];
-        const trees = await insect.getTrees({
-            attributes:["id", "tree"],
-            joinTableAttributes: []
-        });
-        if(trees.length > 0) {
-            trees.sort((a, b) => a.tree.localeCompare(b.tree));
-            payload.push({
-                id: insect.id,
-                name: insect.name,
-                description: insect.description,
-                trees: trees
-            });
+        order: [['name']],
+        include: [
+          {
+            model: Tree,
+            attributes: ['id', 'tree'],
+            through: { attributes: [] },
+            // Add a subquery to order the associated trees alphabetically
+            order: [[{ model: Tree }, 'tree', 'ASC']]
+          }
+        ],
+        // Add a condition to include only insects with tree associations
+        where: {
+          '$Trees.id$': {
+            [Op.not]: null,
+          },
         }
-    }
-    // payload.forEach(insect => insect.trees.sort (a, b) => a.name.localeCompare(b.name);)
-    res.json(payload);
+      });
+
+      // Sort the trees for each insect alphabetically
+    insects.forEach((insect) => {
+        insect.Trees.sort((a, b) => a.tree.localeCompare(b.tree));
+      });
+
+      // Send the array of insects directly in the response
+      res.json(insects);
 });
 
 /**

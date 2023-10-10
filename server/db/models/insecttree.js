@@ -14,6 +14,12 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   InsectTree.init({
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER
+    },
     insectId: {
       type: DataTypes.INTEGER,
       references: {

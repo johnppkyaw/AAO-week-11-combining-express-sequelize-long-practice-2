@@ -17,6 +17,12 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   Insect.init({
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER
+    },
     name: DataTypes.STRING,
     description: DataTypes.STRING,
     fact: DataTypes.STRING,

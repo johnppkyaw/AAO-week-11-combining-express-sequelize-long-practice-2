@@ -17,6 +17,12 @@ module.exports = (sequelize, DataTypes) => {
     }
   };
   Tree.init({
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: DataTypes.INTEGER
+    },
     tree: DataTypes.STRING,
     location: DataTypes.STRING,
     heightFt: {
