@@ -137,7 +137,135 @@ router.get('/insects-trees', async (req, res, next) => {
  *   - Could not create association (use details for specific reason)
  *   - (Any others you think of)
  */
-// Your code here
+class AssociationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'AssociationError';
+  }
+}
+
+class CreationError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'CreationError';
+  }
+}
+
+router.post('/associate-tree-insect', async(req, res, next) => {
+  try {
+    const { tree, insect } = req.body;
+    let targetTree;
+    let targetInsect;
+
+    //tree attribute is missing
+    if(!tree) {
+      throw new CreationError('Tree attribute is missing!');
+    }
+
+    const treeId = tree.id;
+    // If tree.id is provided, look for it.  Return error if not found
+    if(treeId) {
+      targetTree = await Tree.findOne({
+        where: {
+          id: treeId
+        }
+      });
+      if(!targetTree) {
+        throw new Error(`Tree not found with id ${treeId}`)
+      }
+    } else {
+      //if id is not provided, find the tree with name
+      targetTree = await Tree.findOne({
+        where: {
+          tree: tree.name
+        }
+      });
+
+      //if tree is not found with name, create a new row with given information
+      if(!targetTree) {
+        targetTree = Tree.build({
+          tree: tree.name,
+          location: tree.location,
+          heightFt: tree.height,
+          groundCircumferenceFt: tree.size
+        });
+
+        //check and see if all the required fields match with constraints, using helper function
+        await handleValidationErrors(targetTree);
+        await targetTree.save();
+      }
+    }
+
+    //check if insect attribute exist
+    if(!insect) {
+      throw new CreationError('Insect attribute is missing!');
+    };
+
+    const insectId = insect.id;
+    //if id provided, find it
+    if(insectId) {
+      targetInsect = await Insect.findOne({
+        where: {id: insectId}
+      });
+      if(!targetInsect) {
+        throw new CreationError(`Insect does not exist with id ${insectId}`);
+      }
+    } else {
+      //if no id, find with name
+      targetInsect = await Insect.findOne({
+        where: {name: insect.name}
+      });
+
+      //if not found with name, build
+      if(!targetInsect) {
+        targetInsect = Insect.build(insect);
+
+        await handleValidationErrors(targetInsect);
+        await targetInsect.save();
+    }
+  }
+
+    //find association
+    const associatedInsect = await targetTree.getInsects();
+    for(const insect of associatedInsect) {
+      if (insect.name === targetInsect.name) {
+        throw new AssociationError('Association already exists!')
+      }
+    }
+
+    //No association found, make association
+    await targetTree.addInsect(targetInsect);
+
+    res.json({
+      status: 'success',
+      message: 'Successfully created association',
+      data: {
+        tree: targetTree,
+        insect: targetInsect
+        }
+      });
+
+  } catch(err) {
+    return res.json({
+      name: err.name,
+      message: 'Error creating association',
+      details: err.message
+    })
+  }
+});
+
+//handleValidationErrors
+async function handleValidationErrors(instance) {
+  try {
+    await instance.validate();
+  }catch(err) {
+    if (err.name === 'SequelizeUniqueConstraintError') {
+      throw new CreationError(`A ${instance.constructor.name} with the same name already exists`);
+    }
+    // Handle other errors if needed
+    throw err;
+  }
+}
 
 // Export class - DO NOT MODIFY
 module.exports = router;
