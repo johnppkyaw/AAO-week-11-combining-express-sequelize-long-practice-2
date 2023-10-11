@@ -287,7 +287,7 @@ router.get('/search/:value', async (req, res, next) => {
             }
         },
         order: [['tree']]
-    })
+    });
     res.json(trees);
 });
 
